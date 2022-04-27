@@ -1,0 +1,45 @@
+categories:
+  meat_dish:
+    label: 荤菜
+    priority: 0
+  vegetable_dish:
+    label: 素菜
+    priority: 1
+  aquatic:
+    label: 水产
+    priority: 2
+  breakfast:
+    label: 早餐
+    priority: 3
+  staple:
+    label: 主食
+    priority: 4
+  semi-finished:
+    label: 半成品加工
+    priority: 5
+  soup:
+    label: 汤与粥
+    priority: 6
+  drink:
+    label: 饮料
+    priority: 7
+  dessert:
+    label: 甜品
+    priority: 8
+  condiment:
+    label: 酱料和其它
+    priority: 9
+
+excepts:
+  - template
+
+recommends:
+  干煸仔鸡: 6c34d7d0b96e1e0c62d1f8f227dde2b77036332a.webp
+  韩式拌饭: 6f8066f21fdb62bf287ecb133a6e404aeec14595.webp
+  芋泥雪媚娘: 8ec47de4ea99b1845f6ba85efacf1e43d654973e.webp
+  老友猪肉粉: d4df9372b764c7ac86de4d20150d185bb850c406.webp
+  微波炉腊肠煲仔饭: c0187fd36515a4242663515e5e431529d5b6dc70.webp
+  啤酒鸭: b3311956cfdcc3cb4437eebd7b0aed41863e6d59.webp
+  干锅花菜: a3af52ff0e9039f24cb6edaa0ce9dea520ad088e.webp
+  鱼香茄子: 41155612ce7de997ac36f5d3188c17c9f6d9de93.webp
+  凉粉: 660dfc544ef3a7d598619cfd1faa6d86a4e62d53.webp
