@@ -65,7 +65,6 @@ Future<bool> walkDishes({skipImages = false}) async {
   } on DishesMarkDownParseError {
     return false;
   }
-  await dishesMarkDownUtil.dumpToJson();
   return dishesMarkDownUtil.finish();
 }
 

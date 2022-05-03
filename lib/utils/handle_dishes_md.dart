@@ -1,12 +1,12 @@
-import 'dart:convert';
 import 'dart:io';
 
+import 'package:how_to_cook_parser/models/change_logs.dart';
 import 'package:how_to_cook_parser/models/dishes.dart';
+import 'package:how_to_cook_parser/utils/markdown_ast_serializer.dart';
 import 'package:how_to_cook_parser/utils/singleton.dart';
 import 'package:how_to_cook_parser/utils/utils.dart';
 import 'package:isar/isar.dart';
 import 'package:markdown/markdown.dart' as md;
-import 'package:how_to_cook_parser/utils/markdown_ast_serializer.dart';
 import 'package:yaml/yaml.dart';
 
 class CategoryNode {
@@ -22,12 +22,25 @@ class DishesMarkDownUtil {
   List<String> exceptCategories = [];
 
   init() async {
-    _isar = await Isar.open(
-      schemas: [DishSchema],
-      directory: './build/db/dishes',
-      // inspector: true,
-      name: 'dishes_${Singleton().currentRepoCommitId}',
-    );
+    _isar = await openIsar();
+
+    var lastVersion = _isar.changeLogs.where().sortByCreatedAtDesc().limit(1).findFirstSync();
+    if (lastVersion != null) {
+      var bakDbFile = File('./build/db_bak/mdbx.dat');
+      if (lastVersion.commitId == Singleton().currentRepoCommitId) {
+        await _isar.close();
+        if (bakDbFile.existsSync()) {
+          File('./build/db_bak/mdbx.dat').copySync('./build/db/mdbx.dat');
+        } else {
+          File('./build/db/mdbx.dat').deleteSync();
+        }
+        _isar = await openIsar();
+      } else {
+        if (!bakDbFile.parent.existsSync()) bakDbFile.parent.createSync();
+        File('./build/db/mdbx.dat').copySync('./build/db_bak/mdbx.dat');
+      }
+    }
+
     var configsYaml = loadYaml(File('./configs.yaml').readAsStringSync());
     (configsYaml['categories'] as Map).forEach((key, value) {
       categories[key] = CategoryNode(value['label'], value['priority']);
@@ -61,37 +74,19 @@ class DishesMarkDownUtil {
       dish.category = _categoryNode.label;
       dish.priority = _categoryNode.priority;
       await _isar.writeTxn((isar) async {
-        await isar.dishes.put(dish, replaceOnConflict: true);
+        var preDish = await isar.dishes.getByName(dish.name);
+        if (preDish == null) {
+          Singleton().createdDishes.add(dish.name);
+          await isar.dishes.put(dish);
+        } else if (preDish.hash != dish.hash) {
+          Singleton().updatedDishes.add(dish.name);
+          dish.id = preDish.id;
+          await isar.dishes.put(dish);
+        }
       });
       return true;
     });
   }
-
-  Future dumpToJson() async => _isar.dishes.where().findAll().then((res) {
-        var dishes = {};
-        for (var e in res) {
-          dishes[e.name] = {
-            'id': e.id,
-            'hash': e.hash,
-            'category': e.category,
-            'priority': e.priority,
-            'name': e.name,
-            'updated_at': e.updatedAt.toIso8601String(),
-            'summary': e.summary,
-            'ingredients': e.ingredients,
-            'formula': e.formula,
-            'steps': e.steps,
-            'extra': e.extra,
-          };
-        }
-        String resJson = json.encode({
-          'commitId': Singleton().currentRepoCommitId,
-          'dishes': dishes,
-        });
-        var file = File('./build/dishes.json');
-        if (!file.existsSync()) file.createSync(recursive: true);
-        return file.writeAsString(resJson);
-      });
 }
 
 enum ParseStatus {
@@ -178,10 +173,4 @@ class MarkdownParser {
         return;
     }
   }
-}
-
-main() async {
-  var dishesMarkDownUtil = DishesMarkDownUtil();
-  await dishesMarkDownUtil.handleDishesMD('./HowToCook/dishes/home-cooking/地三鲜.md');
-  print('ok');
 }

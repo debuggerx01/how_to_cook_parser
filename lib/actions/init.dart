@@ -1,9 +1,7 @@
-import 'dart:convert';
+import 'dart:ffi';
 import 'dart:io';
 
-import 'package:how_to_cook_parser/utils/singleton.dart';
 import 'package:isar/isar.dart';
-
 import 'package:path/path.dart' show join;
 
 late List<String> stopWords = File('./3rd_party/jieba_flutter/assets/stop_words.txt').readAsLinesSync();
@@ -30,14 +28,9 @@ Future<bool> init() async {
   }
   await Isar.initializeLibraries(
     libraries: {
-      'linux': join(file.parent.path, 'linux/libisar.so'),
+      Abi.linuxX64: join(file.parent.path, 'linux/libisar.so'),
     },
   );
-
-  file = File('./build/dishes.json');
-  if (file.existsSync()) {
-    Singleton().preDishesData = json.decode(file.readAsStringSync());
-  }
 
   return true;
 }

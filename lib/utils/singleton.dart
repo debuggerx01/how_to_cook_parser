@@ -9,5 +9,6 @@ class Singleton {
 
   String? currentDishPath;
 
-  Map? preDishesData;
+  final List<String> updatedDishes = [];
+  final List<String> createdDishes = [];
 }
